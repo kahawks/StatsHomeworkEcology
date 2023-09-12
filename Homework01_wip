@@ -6,7 +6,8 @@ output:
   word_document: default
 ---
 # Problem 1: Oak Trees
-I'm going to be trying to follow along using my oak data. First I have to load it into my R session.
+First I have to load the oak data into my R session.
+
 ```{r, fig.width = 6}
 url <- "https://pdixon.stat.iastate.edu/stat534/homework/HW%201/bothoak.csv"
 rawdata <- read.csv(url, stringsAsFactors = TRUE)
@@ -49,6 +50,12 @@ starting_parameters <-c(mu_initial, r_initial)
 fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
 
 ```
+
+Starting values mu = 20, r = 5
+mle mu = 557,544,500,000
+mle r = 162,293,400,000
+logL = -5,318,621,000,000
+
 
 #### Does optim() venture “outside” the valid parameter ranges (λ ≥ 0, r > 0) then recover? If so, give the values of μ and r where optim() evaluates lnL but recovers.
 Mu and r were always positive, but they were absurdly high. 
@@ -103,10 +110,13 @@ fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', 
 ```
 
 Next I tried 
-mu_initial <- 7
-r_initial <- 10
+
+Starting values mu = 7, r = 10
+
 and made sure to put Hessian = TRUE in my optim() command.
+
 This outputed mu = 880.792 and r = 622.148
+
 ln(mu) = 6.78, ln(r) = 6.433
 
 ```{r, fig.width = 6}
@@ -132,13 +142,55 @@ starting_parameters <-c(mu_initial, r_initial)
 fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE, hessian = TRUE)
 ```
 
+Finally, I wondered if I should just flip 20 and 5 (from the first part of the problem), to make it 5 and 20.
+
+Starting values mu = 5, r = 20
+
+mle mu = 15,443,806
+
+mle r = 2,281,301,242
+
+logL = -25,947,053,140
+
+ln(mu) = 16.55
+ln(r) = 21.55
+
+```{r, fig.width = 6}
+lnlNB0 <- function(param, y, trace=F) {
+
+  mu <- param[1]
+  r <- param[2]
+  
+  ratio <- r/(r+mu)
+  
+  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
+
+  
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+mu_initial <- 5
+r_initial <- 20
+starting_parameters <-c(mu_initial, r_initial)
+
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+
+```
+
 ### Part C
 #### Calculate the standard error of λˆ and the asymptotic 95% confidence interval for the λ. For this confidence interval, use the estimated mean count, λ. and the asymptotic confidence interval equation given in the note summaries.
 
 ##### Option 1:
 Where I set 50 and 60 for the initial values of mu and r:
+
 se (of mu) = 0.6123334
+
 se (of r) = 1.9409526
+
 Confidence interval for mu:
 (2.572575 < mu < 4.972878)
 
@@ -149,16 +201,32 @@ vc<- solve(-fitc1$hessian)
 cov2cor(vc)
 se<-sqrt(diag(vc))
 
-fitc1$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+CI <- fitc1$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+print(se)
+print(CI)
 
 ```
 
 Here, where I set 7 and 10 for the initial values of mu and r. 
-se (of mu) = 0.6123596
-se (of r) = 1.9401993
-Confidence interval for mu:
-(2.572498 < mu < 4.972903)
 
+se (of mu) = 0.6123596
+
+se (of r) = 1.9401993
+
+Confidence interval for mu:
+2.572498 < mu < 4.972903
+
+Here, where I set 5 and 20 for the initial values of mu and r. 
+
+se (of mu) = 0.6123693
+
+se (of r) = 1.9389665
+
+Confidence interval for mu:
+2.572303 < mu < 4.972747
+
+
+Overall, the confidence intervals come out almost the same no matter which starting values I began with.
 
 ##### Option 2
 
@@ -171,6 +239,7 @@ summary(glm.nb(c1 ~ 1))
 ```
 
 I used the standard error from this output (1.94) and set it to se. Unfortunately this gives a negative in the lower bound, so it cannot be correct. 
+
 CI: -.0296 < mu < 7.575
 
 ```{r, fig.width = 6}
@@ -178,4 +247,184 @@ se <- 1.94
 fitc1$par[1] + c(-1, 1)*se[1]*qnorm(0.975)
 
 rbind(lower=fitc1$par - se*qnorm(0.975), upper=fitc1$par + se*qnorm(0.975))
+```
+
+### Part D
+#### Find the mle’s when the parameters are log λ and r. Is the log likelihood for this fit the same as when you use λ as the parameter?
+
+##### Original method:
+Starting values mu = 5, r = 20
+
+mle mu = 15,443,806
+
+mle r 2,281,301,242
+
+logL = -25,947,053,140
+
+ln(mu) = 16.55
+ln(r) = 21.55
+
+##### New method: 
+Starting values: 5, 20
+mle mu = 5.944
+mle r = 1.3196
+logL = -51.314
+
+This new method is much better, because I feel I can actually interpret these values. 
+
+```{r, fig.width = 6}
+lnlNB <- function(param, y, trace=F) {
+
+  mu <- exp(param[1])
+  r <- exp(param[2])
+  
+  lnli = dnbinom(y, size=r, mu=mu, log=T)
+
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+fit_newC1 <- optim(log(c(5, 20)), lnlNB, y = c2, method='BFGS',
+  control=list(fnscale=-1), trace = TRUE, hessian = TRUE)
+```
+
+### Part E
+#### Estimate the log scale mean number of oaks in a dry woodland plot and the standard error of the log-scale estimate. Use the log mean and the asymptotic confidence interval formula to compute a 95% confidence interval for the log mean. Backtransform the log scale confidence interval to provide a 95% confidence interval for λ.
+
+My estimate for mu is 5.94.
+se = 0.2266325
+CI: 3.812 < mu < 9.269
+
+```{r, fig.width = 6}
+lnlNB <- function(param, y, trace=F) {
+
+  mu <- exp(param[1])
+  r <- exp(param[2])
+  
+  lnli = dnbinom(y, size=r, mu=mu, log=T)
+
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+fit_newC1 <- optim(log(c(5, 20)), lnlNB, y = c2, method='BFGS',
+  control=list(fnscale=-1), trace = FALSE, hessian = TRUE)
+
+vc<- solve(-fit_newC1$hessian)
+cov2cor(vc)
+se<-sqrt(diag(vc))
+
+fit_newC1$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+
+transformed <- exp(fit_newC1$par)
+print(transformed)
+
+CI <- fit_newC1$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+
+exp(CI)
+```
+
+### Part F
+#### Use a likelihood ratio test to test the null hypothesis of no difference in mean counts between the dry and the moist woodland. Continue to assume that the counts are approximately Negative Binomial and assume that the two woodlands have the same overdispersion parameter. Report the test statistic (twice the change in log likelihood) and the p-value.
+
+c1 : Dry woodlands: 22 observations, mean = 3.773
+c2 : Moist woodlands: 18 observations, mean = 5.9444
+c0 : Combined: 40 observations, mean = 4.75
+
+I created a confidence interval for the combined data set, with both the moist and the dry woodlands (n = 40), using the log-scale method from part E to visually check whether both means (for dry and for moist) fell within the combined CI. This yielded:
+
+mu = 4.75
+
+se = 0.1419
+
+CI: 3.597 < mu < 6.273.
+
+```{r, fig.width = 6}
+y <- c0
+
+lnlNB <- function(param, y, trace=F) {
+
+  mu <- exp(param[1])
+  r <- exp(param[2])
+  
+  lnli = dnbinom(y, size=r, mu=mu, log=T)
+
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+fitc0 <- optim(log(c(5, 20)), lnlNB, y = c0, method='BFGS',
+  control=list(fnscale=-1), trace = TRUE, hessian = TRUE)
+
+vc<- solve(-fitc0$hessian)
+cov2cor(vc)
+se<-sqrt(diag(vc))
+
+fitc0$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+
+transformed <- exp(fitc0$par)
+print(transformed)
+print(se)
+
+CI <- fitc0$par[1] + c(-1,1)*se[1]*qnorm(0.975)
+
+transformed_CI <- exp(CI)
+
+print(CI)
+print(transformed_CI)
+```
+
+Attempt at doing the hypothesis test to analyze change in oak abundance between the dry and moist woodlands:
+
+I wanted to do a t-test first, because I'm familiar with it and understand how to interpret it: 
+
+t = -1.6541, df = 25.926, p-value = 0.1102
+
+```{r, fig.width = 6}
+
+url <- "https://pdixon.stat.iastate.edu/stat534/homework/HW%201/bothoak.csv"
+rawdata <- read.csv(url, stringsAsFactors = TRUE)
+t_test_result <- t.test(oak ~ woodland, data = rawdata)
+print(t_test_result)
+```
+
+
+Next, the loglikelihood difference. I set up the null hypothesis (that the means are the same for both groups, the whole data set) and the alternative hypothesis (that the means for dry and moist are different). 
+
+null lnL = -128.239
+
+alt lnL = -123.3563
+
+test statistic = 9.765353
+
+p = 0.001778314
+
+With this p value I reject the null hypothesis and conclude that the two types of woodlands have different means of oak trees. Notice that this is a stronger result than my simple t test above. 
+
+```{r, fig.width = 6}
+l0 <- mean(c0)
+l1 <- mean(c1)
+l2 <- mean(c2)
+
+null <- sum(-l0 + c0*log(l0) - lfactorial(c0))
+
+alt <- sum(-l1 + c1*log(l1) - lfactorial(c1)) + sum(-l2 + c2*log(l2) - lfactorial(c2))
+
+test_statistic <- -2 * (null - alt)
+p_value <- 1 - pchisq(test_statistic, df = 1)
+
+print(null)
+print(alt)
+print(test_statistic)
+print(p_value)
+
 ```
