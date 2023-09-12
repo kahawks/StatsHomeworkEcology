@@ -47,7 +47,7 @@ mu_initial <- 20
 r_initial <- 5
 starting_parameters <-c(mu_initial, r_initial)
 
-fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = FALSE)
 
 ```
 
@@ -106,7 +106,7 @@ mu_initial <- 50
 r_initial <- 60
 starting_parameters <-c(mu_initial, r_initial)
 
-fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE, hessian = TRUE)
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = FALSE, hessian = TRUE)
 ```
 
 Next I tried 
@@ -139,7 +139,7 @@ mu_initial <- 7
 r_initial <- 10
 starting_parameters <-c(mu_initial, r_initial)
 
-fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE, hessian = TRUE)
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = FALSE, hessian = TRUE)
 ```
 
 Finally, I wondered if I should just flip 20 and 5 (from the first part of the problem), to make it 5 and 20.
@@ -177,7 +177,7 @@ mu_initial <- 5
 r_initial <- 20
 starting_parameters <-c(mu_initial, r_initial)
 
-fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = FALSE)
 
 ```
 
@@ -288,7 +288,7 @@ lnlNB <- function(param, y, trace=F) {
 }
 
 fit_newC1 <- optim(log(c(5, 20)), lnlNB, y = c2, method='BFGS',
-  control=list(fnscale=-1), trace = TRUE, hessian = TRUE)
+  control=list(fnscale=-1), trace = FALSE, hessian = TRUE)
 ```
 
 ### Part E
@@ -363,7 +363,7 @@ lnlNB <- function(param, y, trace=F) {
 }
 
 fitc0 <- optim(log(c(5, 20)), lnlNB, y = c0, method='BFGS',
-  control=list(fnscale=-1), trace = TRUE, hessian = TRUE)
+  control=list(fnscale=-1), trace = FALSE, hessian = TRUE)
 
 vc<- solve(-fitc0$hessian)
 cov2cor(vc)
@@ -414,21 +414,18 @@ With this p value I reject the null hypothesis and conclude that the two types o
 l0 <- mean(c0)
 l1 <- mean(c1)
 l2 <- mean(c2)
-
 null <- sum(-l0 + c0*log(l0) - lfactorial(c0))
-
 alt <- sum(-l1 + c1*log(l1) - lfactorial(c1)) + sum(-l2 + c2*log(l2) - lfactorial(c2))
-
 test_statistic <- -2 * (null - alt)
 p_value <- 1 - pchisq(test_statistic, df = 1)
-
 print(null)
 print(alt)
 print(test_statistic)
 print(p_value)
 
 ```
-### Part G
+
+###Part G
 #### Estimate the log ratio, as log (mean # oaks in dry / mean # oaks in moist woodland). Use the asymptotic confidence interval formula to compute a 95% confidence interval for that log ratio.
 
 log ratio: -.4547
@@ -462,4 +459,3 @@ converted_CI <- exp(CI_ratio)
 print(converted)
 print(converted_CI)
 ```
-
