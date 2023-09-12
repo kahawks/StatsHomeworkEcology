@@ -428,3 +428,38 @@ print(test_statistic)
 print(p_value)
 
 ```
+### Part G
+#### Estimate the log ratio, as log (mean # oaks in dry / mean # oaks in moist woodland). Use the asymptotic confidence interval formula to compute a 95% confidence interval for that log ratio.
+
+log ratio: -.4547
+
+CI: -2.654 < log ratio < 1.745
+
+
+```{r, fig.width = 6}
+
+log_ratio <- log((mean(c1) / mean(c2)))
+var_c1 <- var(c1)
+var_c2 <- var(c2)
+se_log_ratio <- sqrt((1 / mean(c1))^2 * var_c1 + (1 / mean(c2))^2 * var_c2)
+print(log_ratio)
+print(se_log_ratio)
+CI_ratio <- (log_ratio + c(-1,1)*se_log_ratio*qnorm(0.975))
+print(CI_ratio)
+```
+
+### Part H
+#### Convert the estimates in question 1g into an estimate of the ratio, mean # oaks in dry / mean # oaks in moist woodland, and a 95% confidence interval for that ratio.
+
+ratio: 0.6346644
+
+CI: 0.0703782 < ratio < 5.7233477
+
+```{r, fig.width = 6}
+
+converted <- exp(log_ratio)
+converted_CI <- exp(CI_ratio)
+print(converted)
+print(converted_CI)
+```
+
