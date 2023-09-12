@@ -49,8 +49,94 @@ starting_parameters <-c(mu_initial, r_initial)
 fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
 
 ```
+
 ####Does optim() venture “outside” the valid parameter ranges (λ ≥ 0, r > 0) then recover? If so, give the values of μ and r where optim() evaluates lnL but recovers.
+Mu and r were always positive, but they were absurdly high. 
+Lambda = 455,271,258
+Overdispersion = 532,448,322
 
 ####Does optim() get stuck “outside” the valid parameter ranges?
+It just took off at the high end. It was still technically valid, but not plausible.
 
 ####Do you trust the reported mle’s and lnL?
+Absolutely not. 
+
+###Part B
+#### What would be a more reasonable starting value for λ? (Many answeres are possible, some more reasonable than others). Use optim() with that starting value. If optim() still gives outrageous values, try different choices of r. Report the estimated λ (not log λ) and the NegBin overdispersion parameter.
+
+I tried starting values of mu = 4 and r = 2 , because they seemed closer to what could plausibly be the truth. The lambda was in the millions.
+
+```{r, fig.width = 6}
+lnlNB0 <- function(param, y, trace=F) {
+
+  mu <- param[1]
+  r <- param[2]
+  
+  ratio <- r/(r+mu)
+  
+  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
+
+  
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+mu_initial <- 4
+r_initial <- 2
+starting_parameters <-c(mu_initial, r_initial)
+
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+
+```
+This time lambda = 4.587 and overdispersion = -.0008.
+
+Now I'm going to literally try the mean of the data for mu, to see if that works. First I set r to 1, but that returned too many errors, so I chose a higher value of 5. I kept receiving the error: "Error in optim(par = starting_parameters, fn = lnlNB0, y = c1, method = "BFGS",  : 
+  non-finite finite-difference value" 
+
+```{r, fig.width = 6}
+lnlNB0 <- function(param, y, trace=F) {
+
+  mu <- param[1]
+  r <- param[2]
+  ratio <- r/(r+mu)
+  
+  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
+
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+}
+
+mu_initial <- 3.77
+r_initial <- 5
+starting_parameters <-c(mu_initial, r_initial)
+
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+
+```
+This time mu was dipping into negative values during optimization. But the final value for lambda was 3.769 and the value for overdispersion was -.0005.
+
+### Part C
+#### Calculate the standard error of λˆ and the asymptotic 95% confidence interval for the λ. For this confidence interval, use the estimated mean count, λ. and the asymptotic confidence interval equation given in the note summaries.
+
+I'm using the function against glm.nb because I couldn't get rid of the error messages using the above method.
+
+```{r, fig.width = 6}
+summary(glm.nb(c1 ~ 1))
+2*lnlNB0(c(exp(2.7973), 6.11), c1)
+```
+
+I used the standard error from this output (1.94) and set it to se.
+
+```{r, fig.width = 6}
+se <- 1.94
+fitc1$par[1] + c(-1, 1)*se[1]*qnorm(0.975)
+
+rbind(lower=fitc1$par - se*qnorm(0.975), upper=fitc1$par + se*qnorm(0.975))
+# 95% ci's for all parameters (columns of the output)
+```
