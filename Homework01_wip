@@ -1,0 +1,75 @@
+---
+title: "Ecological Statistics Homework 1"
+author: "Kale Hawks"
+output:
+  html_document: default
+  word_document: default
+---
+# Problem 1: Oak Trees
+I'm going to be trying to follow along using my oak data. First I have to load it into my R session.
+```{r, fig.width = 6}
+url <- "https://pdixon.stat.iastate.edu/stat534/homework/HW%201/bothoak.csv"
+rawdata <- read.csv(url, stringsAsFactors = TRUE)
+c1 <- rawdata[rawdata$woodland == "dry", "oak"]
+c2 <- rawdata[rawdata$woodland == "moist", "oak"]
+c0 <- c(c1, c2)
+library(emmeans)
+library(MASS)
+library(mgcv)
+
+```
+
+## This problem is intended to give you practice working with likelihood and distributions. The data comes from a study of white oaks in two woodlands. One woodland has dry soils; the other has moister soils. Ecology students counted the number of white oak trees in 10m x 10m plots in both types of woodland. There were 22 dry and 18 moist woodland plots. The data are provided in two forms. oakD.csv and oakM.csv have the counts in the dry and moist woodlands, respectively. bothoak.csv has one row for each of the 40 plots. The two variables are the type of woodland (dry, moist) and the number of white oaks. Throughout we will assume that the number of white oak trees in a plot has a Negative Binomial distribution.
+
+### Part A
+Use the log-likelihood function lnlNB0() defined in the lnlNB.r code on the class website to fit a Negative Binomial distribution to the counts in dry woodland plots. Start the numerical optimization at λ = 20, r = 5, use method=’BFGS’, and turn on trace=T to see the path.
+Does optim() venture “outside” the valid parameter ranges (λ ≥ 0, r > 0) then recover? If so, give the values of μ and r where optim() evaluates lnL but recovers.
+Does optim() get stuck “outside” the valid parameter ranges?
+Do you trust the reported mle’s and lnL?
+
+library(MASS)   # for glm.nb as a check
+
+lnlNB0 <- function(param, y, trace=F) {
+  # compute lnl for Negative binomial distribution
+  # for a single sample of observations
+  
+  # no precautions for mu < 0 or r < 0
+  
+  mu <- param[1]
+  r <- param[2]
+  
+  ratio <- r/(r+mu)  ratio <- r/(r+mu)
+  
+  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
+  # lnL contribution for each observation
+  
+  s = sum(lnli)
+  if (trace) {
+    print(c(mu, r, s))
+    }
+  s
+  }
+```{r, fig.width = 6}
+param <- mean(c1)
+y <- c1
+
+lnlNB0 <- function(param, y, trace = FALSE) {
+    mu <- param[1]
+    r <- param[2]
+    ratio <- r / (r + mu)
+
+    if (trace) {
+        cat("mu:", mu, "\n")
+        cat("r:", r, "\n")
+        cat("Log-likelihood:", log_likelihood, "\n")
+    }
+}
+
+initial_values <- c(20, 5)
+fit <- optim(par = initial_values, fn = lnlNB0, y = c1, method = "BFGS", trace = TRUE)
+
+fitted_mu <- fit$par[1]
+fitted_r <- fit$par[2]
+cat("Fitted mu:", fitted_mu, "\n")
+cat("Fitted r:", fitted_r, "\n")
+```
