@@ -19,47 +19,38 @@ library(mgcv)
 
 ```
 
-## This problem is intended to give you practice working with likelihood and distributions. The data comes from a study of white oaks in two woodlands. One woodland has dry soils; the other has moister soils. Ecology students counted the number of white oak trees in 10m x 10m plots in both types of woodland. There were 22 dry and 18 moist woodland plots. The data are provided in two forms. oakD.csv and oakM.csv have the counts in the dry and moist woodlands, respectively. bothoak.csv has one row for each of the 40 plots. The two variables are the type of woodland (dry, moist) and the number of white oaks. Throughout we will assume that the number of white oak trees in a plot has a Negative Binomial distribution.
+#### This problem is intended to give you practice working with likelihood and distributions. The data comes from a study of white oaks in two woodlands. One woodland has dry soils; the other has moister soils. Ecology students counted the number of white oak trees in 10m x 10m plots in both types of woodland. There were 22 dry and 18 moist woodland plots. The data are provided in two forms. oakD.csv and oakM.csv have the counts in the dry and moist woodlands, respectively. bothoak.csv has one row for each of the 40 plots. The two variables are the type of woodland (dry, moist) and the number of white oaks. Throughout we will assume that the number of white oak trees in a plot has a Negative Binomial distribution.
 
 ### Part A
-Use the log-likelihood function lnlNB0() defined in the lnlNB.r code on the class website to fit a Negative Binomial distribution to the counts in dry woodland plots. Start the numerical optimization at λ = 20, r = 5, use method=’BFGS’, and turn on trace=T to see the path.
-Does optim() venture “outside” the valid parameter ranges (λ ≥ 0, r > 0) then recover? If so, give the values of μ and r where optim() evaluates lnL but recovers.
-Does optim() get stuck “outside” the valid parameter ranges?
-Do you trust the reported mle’s and lnL?
+####Use the log-likelihood function lnlNB0() defined in the lnlNB.r code on the class website to fit a Negative Binomial distribution to the counts in dry woodland plots. Start the numerical optimization at λ = 20, r = 5, use method=’BFGS’, and turn on trace=T to see the path.
 
-library(MASS)   # for glm.nb as a check
-
+```{r, fig.width = 6}
 lnlNB0 <- function(param, y, trace=F) {
-  # compute lnl for Negative binomial distribution
-  # for a single sample of observations
-  
-  # no precautions for mu < 0 or r < 0
-  
+
   mu <- param[1]
   r <- param[2]
   
   ratio <- r/(r+mu)
   
   lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
-  # lnL contribution for each observation
+
   
   s = sum(lnli)
   if (trace) {
     print(c(mu, r, s))
     }
   s
-  }
-```{r, fig.width = 6}
-y <- c1
+}
 
-  
-  mu <- param[1]
-  r <- param[2]
-  
-  ratio <- r/(r+mu)
-  
-  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
-    s = sum(lnli)
+mu_initial <- 20
+r_initial <- 5
+starting_parameters <-c(mu_initial, r_initial)
 
-    print(c(mu, r, s))
+fitc1 <- optim(par = starting_parameters, fn = lnlNB0, y = c1, method = 'BFGS', trace = TRUE)
+
 ```
+####Does optim() venture “outside” the valid parameter ranges (λ ≥ 0, r > 0) then recover? If so, give the values of μ and r where optim() evaluates lnL but recovers.
+
+####Does optim() get stuck “outside” the valid parameter ranges?
+
+####Do you trust the reported mle’s and lnL?
