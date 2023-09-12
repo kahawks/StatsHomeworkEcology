@@ -38,7 +38,7 @@ lnlNB0 <- function(param, y, trace=F) {
   mu <- param[1]
   r <- param[2]
   
-  ratio <- r/(r+mu)  ratio <- r/(r+mu)
+  ratio <- r/(r+mu)
   
   lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
   # lnL contribution for each observation
@@ -50,26 +50,16 @@ lnlNB0 <- function(param, y, trace=F) {
   s
   }
 ```{r, fig.width = 6}
-param <- mean(c1)
 y <- c1
 
-lnlNB0 <- function(param, y, trace = FALSE) {
-    mu <- param[1]
-    r <- param[2]
-    ratio <- r / (r + mu)
+  
+  mu <- param[1]
+  r <- param[2]
+  
+  ratio <- r/(r+mu)
+  
+  lnli <- lgamma(r+y) - lgamma(y+1) - lgamma(r) + r*log(ratio) + y*log(1-ratio)
+    s = sum(lnli)
 
-    if (trace) {
-        cat("mu:", mu, "\n")
-        cat("r:", r, "\n")
-        cat("Log-likelihood:", log_likelihood, "\n")
-    }
-}
-
-initial_values <- c(20, 5)
-fit <- optim(par = initial_values, fn = lnlNB0, y = c1, method = "BFGS", trace = TRUE)
-
-fitted_mu <- fit$par[1]
-fitted_r <- fit$par[2]
-cat("Fitted mu:", fitted_mu, "\n")
-cat("Fitted r:", fitted_r, "\n")
+    print(c(mu, r, s))
 ```
